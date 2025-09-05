@@ -52,7 +52,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
         }
         return reizigers;
     }
-
+// numm staan voor params
     @Override
     public boolean Save(Reiziger reiziger) throws SQLException {
         String sql = "INSERT INTO reiziger (reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum) VALUES (?, ?, ?, ?, ?)";
