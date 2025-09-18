@@ -1,8 +1,6 @@
 
 import Domain.ReizigerHibernate;
-import Domain.AdresHibernate;
-import DaoSql.ReizigerDAOHibernate;
-import DaoSql.AdresDAOHibernate;
+import daosql.ReizigerDAOHibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
