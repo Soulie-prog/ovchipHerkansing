@@ -1,7 +1,7 @@
-package DaoSql;
+package main.java.daosql;
 
-import Dao.ReizigerDAO;
-import Domain.Reiziger;
+import main.java.dao.ReizigerDAO;
+import main.java.domain.Reiziger;
 
 import java.sql.*;
 import java.util.ArrayList;

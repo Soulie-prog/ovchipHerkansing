@@ -1,6 +1,6 @@
-import Dao.ReizigerDAO;
-import DaoSql.ReizigerDAOPsql;
-import Domain.Reiziger;
+import main.java.dao.ReizigerDAO;
+import main.java.daosql.ReizigerDAOPsql;
+import main.java.domain.Reiziger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
