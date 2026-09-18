@@ -61,6 +61,7 @@ public class Mainp2 {
         rdao.update(sietske);
         System.out.println("[Test] Na upate:");
         System.out.println(rdao.findById(sietske.getId()));
+        System.out.println(reizigers);
 
         rdao.delete(sietske);
         System.out.println("[Test Na delete");
