@@ -67,15 +67,14 @@ public class Adres {
     public void setReiziger(Reiziger reiziger) {
         this.reiziger = reiziger;
     }
-
     @Override
     public String toString() {
-        return "Adres {#" + id
-                + ", postcode='" + postcode + "'"
-                + ", huisnummer='" + huisnummer + "'"
-                + ", straat='" + straat + "'"
-                + ", woonplaats='" + woonplaats + "'"
-                + ", reiziger=#" + (reiziger == null ? "null" : reiziger.getId())
+        return "Adres {#" + id + "\n"
+                + "  postcode='" + postcode + ","
+                + "  huisnummer='" + huisnummer + ","
+                + "  straat='" + straat + ","
+                + "  woonplaats='" + woonplaats + "'\n"
+                + "  reiziger=#" + (reiziger == null ? "null" : reiziger.getId()) + "\n"
                 + "}";
     }
 }
