@@ -79,8 +79,8 @@ public class ReizigerDAOPsql implements ReizigerDAO {
             pst.setDate(1, gbdatum);
             rs = pst.executeQuery();
             while (rs.next()) {
-                reizigers.add(maakReiziger(rs));
-            }
+                reizigers.add(maakReiziger(rs));}
+
         } finally {
             if (rs != null) rs.close();
             if (pst != null) pst.close();
@@ -94,9 +94,11 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean save(Reiziger reiziger) throws SQLException {
-        String sql = "INSERT INTO reiziger (reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reiziger " +
+                "(reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum) " +
+                "VALUES (?, ?, ?, ?, ?)";
         PreparedStatement pst = null;
-        boolean gelukt;
+
         try {
             pst = conn.prepareStatement(sql);
             pst.setInt(1, reiziger.getId());
@@ -104,13 +106,14 @@ public class ReizigerDAOPsql implements ReizigerDAO {
             pst.setString(3, reiziger.getTussenvoegsel());
             pst.setString(4, reiziger.getAchternaam());
             pst.setDate(5, reiziger.getGeboortedatum());
-            gelukt = pst.executeUpdate() == 1;
+            if (pst.executeUpdate() != 1) {
+                return false;
+            }
         } finally {
             if (pst != null) pst.close();
         }
-        if (!gelukt) {
-            return false;
-        }
+
+        // Adres opslaan
         if (reiziger.getAdres() != null) {
             reiziger.getAdres().setReiziger(reiziger);
             adresDAO.save(reiziger.getAdres());
@@ -124,9 +127,14 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean update(Reiziger reiziger) throws SQLException {
-        String sql = "UPDATE reiziger SET voorletters = ?, tussenvoegsel = ?, achternaam = ?, geboortedatum = ? WHERE reiziger_id = ?";
+        String sql = "UPDATE reiziger SET " +
+                "voorletters = ?, " +
+                "tussenvoegsel = ?, " +
+                "achternaam = ?, " +
+                "geboortedatum = ? " +
+                "WHERE reiziger_id = ?";
         PreparedStatement pst = null;
-        boolean gelukt;
+
         try {
             pst = conn.prepareStatement(sql);
             pst.setString(1, reiziger.getVoorletters());
@@ -134,61 +142,40 @@ public class ReizigerDAOPsql implements ReizigerDAO {
             pst.setString(3, reiziger.getAchternaam());
             pst.setDate(4, reiziger.getGeboortedatum());
             pst.setInt(5, reiziger.getId());
-            gelukt = pst.executeUpdate() == 1;
+            if (pst.executeUpdate() != 1) {
+                return false;
+            }
         } finally {
             if (pst != null) pst.close();
         }
-        if (!gelukt) {
-            return false;
+
+
+        String deleteAdresSql = "DELETE FROM adres WHERE reiziger_id = ?";
+
+        try (PreparedStatement deleteAdres = conn.prepareStatement(deleteAdresSql)) {
+            deleteAdres.setInt(1, reiziger.getId());
+            deleteAdres.executeUpdate();
         }
 
-        // adres synchroniseren
-        Adres bestaandAdres = adresDAO.findByReiziger(reiziger);
-        Adres nieuwAdres = reiziger.getAdres();
-        if (nieuwAdres == null) {
-            if (bestaandAdres != null) {
-                adresDAO.delete(bestaandAdres);
-            }
-        } else {
-            nieuwAdres.setReiziger(reiziger);
-            if (bestaandAdres == null) {
-                adresDAO.save(nieuwAdres);
-            } else {
-                adresDAO.update(nieuwAdres);
-            }
+        if (reiziger.getAdres() != null) {
+            reiziger.getAdres().setReiziger(reiziger);
+            adresDAO.save(reiziger.getAdres());
         }
 
-        // ov-chipkaarten synchroniseren
-        List<OVChipkaart> bestaandeKaarten = ovChipkaartDAO.findByReiziger(reiziger);
-        List<OVChipkaart> nieuweKaarten = reiziger.getOvChipkaarten();
 
-        for (OVChipkaart bestaand : bestaandeKaarten) {
-            boolean nogAanwezig = false;
-            for (OVChipkaart nieuw : nieuweKaarten) {
-                if (nieuw.getKaartNummer() == bestaand.getKaartNummer()) {
-                    nogAanwezig = true;
-                    break;
-                }
-            }
-            if (!nogAanwezig) {
-                ovChipkaartDAO.delete(bestaand);
-            }
+        String deleteKaartenSql =
+                "DELETE FROM ov_chipkaart WHERE reiziger_id = ?";
+
+        try (PreparedStatement deleteKaarten =
+                     conn.prepareStatement(deleteKaartenSql)) {
+
+            deleteKaarten.setInt(1, reiziger.getId());
+            deleteKaarten.executeUpdate();
         }
 
-        for (OVChipkaart nieuw : nieuweKaarten) {
-            nieuw.setReiziger(reiziger);
-            boolean bestondAl = false;
-            for (OVChipkaart bestaand : bestaandeKaarten) {
-                if (bestaand.getKaartNummer() == nieuw.getKaartNummer()) {
-                    bestondAl = true;
-                    break;
-                }
-            }
-            if (bestondAl) {
-                ovChipkaartDAO.update(nieuw);
-            } else {
-                ovChipkaartDAO.save(nieuw);
-            }
+        for (OVChipkaart kaart : reiziger.getOvChipkaarten()) {
+            kaart.setReiziger(reiziger);
+            ovChipkaartDAO.save(kaart);
         }
 
         return true;
@@ -196,28 +183,34 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean delete(Reiziger reiziger) throws SQLException {
-        for (OVChipkaart kaart : ovChipkaartDAO.findByReiziger(reiziger)) {
-            ovChipkaartDAO.delete(kaart);
-        }
-        reiziger.setOvChipkaarten(new ArrayList<>());
 
-        Adres adres = reiziger.getAdres();
-        if (adres == null) {
-            adres = adresDAO.findByReiziger(reiziger);
-        }
-        if (adres != null) {
-            adresDAO.delete(adres);
-            reiziger.setAdres(null);
+
+        String deleteKaartenSql =
+                "DELETE FROM ov_chipkaart WHERE reiziger_id = ?";
+
+        try (PreparedStatement pst =
+                     conn.prepareStatement(deleteKaartenSql)) {
+
+            pst.setInt(1, reiziger.getId());
+            pst.executeUpdate();
         }
 
-        String sql = "DELETE FROM reiziger WHERE reiziger_id = ?";
-        PreparedStatement pst = null;
-        try {
-            pst = conn.prepareStatement(sql);
+
+        String deleteAdresSql =
+                "DELETE FROM adres WHERE reiziger_id = ?";
+
+        try (PreparedStatement pst =
+                     conn.prepareStatement(deleteAdresSql)) {
+
+            pst.setInt(1, reiziger.getId());
+            pst.executeUpdate();
+        }
+        String deleteReizigerSql =
+                "DELETE FROM reiziger WHERE reiziger_id = ?";
+        try (PreparedStatement pst =
+                     conn.prepareStatement(deleteReizigerSql)) {
             pst.setInt(1, reiziger.getId());
             return pst.executeUpdate() == 1;
-        } finally {
-            if (pst != null) pst.close();
         }
     }
 
@@ -243,5 +236,4 @@ public class ReizigerDAOPsql implements ReizigerDAO {
         List<OVChipkaart> kaarten = ovChipkaartDAO.findByReiziger(reiziger);
         reiziger.setOvChipkaarten(kaarten);
     }
-
 }

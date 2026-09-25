@@ -79,6 +79,27 @@ public class Reiziger {
     public void setOvChipkaarten(List<OVChipkaart> ovChipkaarten) {
         this.ovChipkaarten = ovChipkaarten;
     }
+    public boolean voegToeOVChipkaart(OVChipkaart ovChipkaart) {
+        if (ovChipkaart == null || ovChipkaarten.contains(ovChipkaart)) {
+            return false;
+        }
+        ovChipkaarten.add(ovChipkaart);
+        if (ovChipkaart.getReiziger() != this) {
+            ovChipkaart.setReiziger(this);
+        }
+        return true;
+    }
+
+    public boolean verwijderOVChipkaart(OVChipkaart ovChipkaart) {
+        if (ovChipkaart == null || !ovChipkaarten.contains(ovChipkaart)) {
+            return false;
+        }
+        ovChipkaarten.remove(ovChipkaart);
+        if (ovChipkaart.getReiziger() == this) {
+            ovChipkaart.setReiziger(null);
+        }
+        return true;
+    }
 
     public String getNaam() {
         if (tussenvoegsel == null || tussenvoegsel.isEmpty()) {

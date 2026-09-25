@@ -63,12 +63,15 @@ public class Mainp4 {
         Adres adres = new Adres(88, "3512 AB", "10", "Kruisstraat", "Utrecht", martijn);
         martijn.setAdres(adres);
 
-        OVChipkaart kaart1 = new OVChipkaart(881, java.sql.Date.valueOf("2027-01-01"), 2, 25.50, martijn);
-        OVChipkaart kaart2 = new OVChipkaart(882, java.sql.Date.valueOf("2028-05-15"), 1, 10.00, martijn);
-        List<OVChipkaart> kaarten = new ArrayList<>();
-        kaarten.add(kaart1);
-        kaarten.add(kaart2);
-        martijn.setOvChipkaarten(kaarten);
+        OVChipkaart kaart1 = new OVChipkaart(881, java.sql.Date.valueOf("2027-01-01"), 2, 25.50, null);
+        OVChipkaart kaart2 = new OVChipkaart(882, java.sql.Date.valueOf("2028-05-15"), 1, 10.00, null);
+
+        martijn.voegToeOVChipkaart(kaart1);
+        martijn.voegToeOVChipkaart(kaart2);
+        //volgens feedback nog gecheckt.
+        System.out.println("[Test] Reiziger van kaart2: " + kaart2.getReiziger().getNaam());
+        System.out.println("[Test] Reiziger van kaart1: " + kaart1.getReiziger().getNaam());
+        System.out.println("[Test] Reiziger van kaart2: " + kaart2.getReiziger().getNaam());
 
         rdao.save(martijn);
         System.out.println("[Test] Na save reiziger met adres en 2 ov-chipkaarten:");
@@ -85,12 +88,10 @@ public class Mainp4 {
         // updatr: saldo van kaart1 aanpassen, kaart2 verwijderen uit de lijst,
         // een nieuwe kaart3 toevoegen
         kaart1.setSaldo(42.75);
-        OVChipkaart kaart3 = new OVChipkaart(883, java.sql.Date.valueOf("2029-09-01"), 1, 5.00, martijn);
+        OVChipkaart kaart3 = new OVChipkaart(883, java.sql.Date.valueOf("2029-09-01"), 1, 5.00, null);
 
-        List<OVChipkaart> bijgewerkt = new ArrayList<>();
-        bijgewerkt.add(kaart1);
-        bijgewerkt.add(kaart3);
-        martijn.setOvChipkaarten(bijgewerkt);
+        martijn.verwijderOVChipkaart(kaart2);
+        martijn.voegToeOVChipkaart(kaart3);
 
         rdao.update(martijn);
         System.out.println("[Test] Na update (kaart1 saldo aangepast, kaart2 verwijderd, kaart3 toegevoegd):");
